@@ -16,15 +16,14 @@
 
 ### 新服务器一键安装
 ```bash
-curl -sSL https://raw.githubusercontent.com/你的用户名/xray-deploy/main/deploy.sh | bash
+curl -sSL https://raw.githubusercontent.com/shuggg999/xray-deploy/main/install.sh | bash
 ```
 
 ### 手动安装
 ```bash
-git clone https://github.com/你的用户名/xray-deploy.git
+git clone https://github.com/shuggg999/xray-deploy.git
 cd xray-deploy
-chmod +x deploy.sh
-./deploy.sh
+./install.sh
 ```
 
 ## 📋 功能菜单
