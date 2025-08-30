@@ -36,6 +36,15 @@
           ]
         }
       }
+    },
+    {
+      "listen": "0.0.0.0",
+      "port": 8388,
+      "protocol": "shadowsocks",
+      "settings": {
+        "method": "2022-blake3-aes-128-gcm",
+        "password": "{{SS_PASSWORD}}"
+      }
     }
   ],
   "outbounds": [

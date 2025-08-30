@@ -72,10 +72,31 @@ restore_config() {
     fi
     
     # 恢复客户端配置
+    # VLESS Reality 配置
+    if [ -f "$RESTORE_DIR/vless_config.txt" ]; then
+        cp "$RESTORE_DIR/vless_config.txt" /root/
+        cp "$RESTORE_DIR/vless_config_base64.txt" /root/ 2>/dev/null
+        cp "$RESTORE_DIR/vless_qrcode.txt" /root/ 2>/dev/null
+        cp "$RESTORE_DIR/vless_qrcode_base64.txt" /root/ 2>/dev/null
+        success "VLESS Reality 配置已恢复"
+    fi
+    
+    # Shadowsocks 配置
+    if [ -f "$RESTORE_DIR/ss_config.txt" ]; then
+        cp "$RESTORE_DIR/ss_config.txt" /root/
+        cp "$RESTORE_DIR/ss_config_base64.txt" /root/ 2>/dev/null
+        cp "$RESTORE_DIR/ss_qrcode.txt" /root/ 2>/dev/null
+        cp "$RESTORE_DIR/ss_qrcode_base64.txt" /root/ 2>/dev/null
+        success "Shadowsocks 配置已恢复"
+    fi
+    
+    # 兼容旧格式
     if [ -f "$RESTORE_DIR/client_config.txt" ]; then
         cp "$RESTORE_DIR/client_config.txt" /root/
+        cp "$RESTORE_DIR/client_config_base64.txt" /root/ 2>/dev/null
         cp "$RESTORE_DIR/qrcode.txt" /root/ 2>/dev/null
-        success "客户端配置已恢复"
+        cp "$RESTORE_DIR/qrcode_base64.txt" /root/ 2>/dev/null
+        success "兼容旧格式客户端配置已恢复"
     fi
     
     # 恢复网站文件
@@ -122,9 +143,25 @@ restore_config() {
     success "配置恢复完成！"
     
     # 显示恢复后的信息
-    if [ -f "/root/client_config.txt" ]; then
-        printf "\n${GREEN}=== 恢复的客户端连接 ===${RESET}\n"
+    printf "\n${GREEN}=== 恢复的客户端连接 ===${RESET}\n"
+    
+    # VLESS Reality 连接
+    if [ -f "/root/vless_config.txt" ]; then
+        printf "\n${BLUE}VLESS Reality 连接：${RESET}\n"
+        cat /root/vless_config.txt
+    elif [ -f "/root/client_config.txt" ]; then
+        printf "\n${BLUE}VLESS Reality 连接（兼容格式）：${RESET}\n"
         cat /root/client_config.txt
+    fi
+    
+    # Shadowsocks 连接
+    if [ -f "/root/ss_config.txt" ]; then
+        printf "\n${BLUE}Shadowsocks 连接：${RESET}\n"
+        cat /root/ss_config.txt
+    fi
+    
+    if [ ! -f "/root/vless_config.txt" ] && [ ! -f "/root/client_config.txt" ] && [ ! -f "/root/ss_config.txt" ]; then
+        printf "\n${YELLOW}未找到客户端连接信息${RESET}\n"
     fi
 }
 

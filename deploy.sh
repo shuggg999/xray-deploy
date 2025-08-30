@@ -1,6 +1,6 @@
 #!/bin/bash
-# Xray Reality 一键部署脚本
-# 基于 servermaster 精简版本
+# Xray 双协议一键部署脚本
+# 支持Reality+VLESS和Shadowsocks双协议
 
 set -e
 
@@ -49,18 +49,19 @@ check_root() {
 show_menu() {
     clear
     echo "======================================================"
-    echo "        Xray Reality 部署管理脚本"
+    echo "        Xray 双协议部署管理脚本"
     echo "======================================================"
     echo ""
-    echo "1. 全新安装 Xray Reality"
+    echo "1. 全新安装 Xray 双协议"
     echo "2. 从备份恢复配置"
     echo "3. 备份当前配置"
     echo "4. 查看服务状态"
     echo "5. 生成客户端连接"
-    echo "6. 卸载服务"
+    echo "6. Docker代理配置"
+    echo "7. 卸载服务"
     echo "0. 退出"
     echo ""
-    echo -n "请选择操作 [0-6]: "
+    echo -n "请选择操作 [0-7]: "
 }
 
 # 主函数
@@ -103,6 +104,12 @@ main() {
                 read -p "按任意键继续..."
                 ;;
             6)
+                info "Docker代理配置..."
+                . "$SCRIPT_DIR/modules/docker.sh"
+                docker_main
+                read -p "按任意键继续..."
+                ;;
+            7)
                 info "开始卸载..."
                 . "$SCRIPT_DIR/modules/uninstall.sh"
                 uninstall_main

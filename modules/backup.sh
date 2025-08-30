@@ -24,9 +24,28 @@ backup_config() {
     cp -r /root/xray-deploy/* "$CURRENT_BACKUP/scripts/" 2>/dev/null
     
     # 备份客户端连接信息
+    # VLESS Reality 连接
+    if [ -f "/root/vless_config.txt" ]; then
+        cp /root/vless_config.txt "$CURRENT_BACKUP/"
+        cp /root/vless_config_base64.txt "$CURRENT_BACKUP/" 2>/dev/null
+        cp /root/vless_qrcode.txt "$CURRENT_BACKUP/" 2>/dev/null
+        cp /root/vless_qrcode_base64.txt "$CURRENT_BACKUP/" 2>/dev/null
+    fi
+    
+    # Shadowsocks 连接
+    if [ -f "/root/ss_config.txt" ]; then
+        cp /root/ss_config.txt "$CURRENT_BACKUP/"
+        cp /root/ss_config_base64.txt "$CURRENT_BACKUP/" 2>/dev/null
+        cp /root/ss_qrcode.txt "$CURRENT_BACKUP/" 2>/dev/null
+        cp /root/ss_qrcode_base64.txt "$CURRENT_BACKUP/" 2>/dev/null
+    fi
+    
+    # 兼容旧文件格式
     if [ -f "/root/client_config.txt" ]; then
         cp /root/client_config.txt "$CURRENT_BACKUP/"
+        cp /root/client_config_base64.txt "$CURRENT_BACKUP/" 2>/dev/null
         cp /root/qrcode.txt "$CURRENT_BACKUP/" 2>/dev/null
+        cp /root/qrcode_base64.txt "$CURRENT_BACKUP/" 2>/dev/null
     fi
     
     # 备份网站文件
@@ -50,9 +69,10 @@ backup_config() {
 Xray版本: $(xray version 2>/dev/null | head -1)
 系统信息: $(uname -a)
 备份内容:
-- Xray配置文件
+- Xray双协议配置文件
 - 部署脚本
-- 客户端连接信息
+- VLESS Reality客户端连接信息
+- Shadowsocks客户端连接信息
 - 网站文件
 - 日志文件
 - 服务状态

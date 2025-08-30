@@ -3,7 +3,7 @@
 
 # 检查服务状态
 check_status() {
-    info "检查 Xray Reality 服务状态..."
+    info "检查 Xray 双协议服务状态..."
     
     printf "\n${GREEN}=== 系统信息 ===${RESET}\n"
     printf "服务器IP: $(curl -s https://api.ipify.org 2>/dev/null || echo '获取失败')\n"
@@ -31,10 +31,17 @@ check_status() {
         fi
         
         # 检查端口监听
+        printf "\n${BLUE}=== 端口监听情况 ===${RESET}\n"
         if netstat -tlnp 2>/dev/null | grep -q ":443"; then
-            printf "${GREEN}✓ 端口443: 正在监听${RESET}\n"
+            printf "${GREEN}✓ 端口443(Reality): 正在监听${RESET}\n"
         else
-            printf "${RED}✗ 端口443: 未监听${RESET}\n"
+            printf "${RED}✗ 端口443(Reality): 未监听${RESET}\n"
+        fi
+        
+        if netstat -tlnp 2>/dev/null | grep -q ":8388"; then
+            printf "${GREEN}✓ 端口8388(Shadowsocks): 正在监听${RESET}\n"
+        else
+            printf "${RED}✗ 端口8388(Shadowsocks): 未监听${RESET}\n"
         fi
         
     else
@@ -80,31 +87,81 @@ check_status() {
         fi
         
         # 显示协议信息
-        protocol=$(grep -o '"protocol": "[^"]*' /usr/local/etc/xray/config.json | head -1 | cut -d'"' -f4)
-        printf "协议: $protocol\n"
+        printf "\n${BLUE}=== 配置的协议 ===${RESET}\n"
+        protocols=$(grep -o '"protocol": "[^"]*' /usr/local/etc/xray/config.json | cut -d'"' -f4)
+        ports=$(grep -o '"port": [0-9]*' /usr/local/etc/xray/config.json | cut -d' ' -f2)
         
-        port=$(grep -o '"port": [0-9]*' /usr/local/etc/xray/config.json | head -1 | cut -d' ' -f2)
-        printf "端口: $port\n"
+        protocol_array=($protocols)
+        port_array=($ports)
+        
+        for i in "${!protocol_array[@]}"; do
+            protocol=${protocol_array[$i]}
+            port=${port_array[$i]}
+            case $protocol in
+                "vless")
+                    printf "${GREEN}✓ VLESS Reality: 端口 $port${RESET}\n"
+                    ;;
+                "shadowsocks")
+                    printf "${GREEN}✓ Shadowsocks: 端口 $port${RESET}\n"
+                    ;;
+                *)
+                    printf "${BLUE}- $protocol: 端口 $port${RESET}\n"
+                    ;;
+            esac
+        done
         
     else
         printf "${RED}✗ Xray 配置文件: 不存在${RESET}\n"
     fi
     
     printf "\n${GREEN}=== 客户端连接信息 ===${RESET}\n"
-    if [ -f "/root/client_config.txt" ]; then
-        printf "${GREEN}✓ 客户端配置: 可用${RESET}\n"
-        printf "配置文件: /root/client_config.txt\n"
+    
+    # 检查 VLESS Reality 配置
+    if [ -f "/root/vless_config.txt" ] || [ -f "/root/client_config.txt" ]; then
+        printf "${GREEN}✓ VLESS Reality 配置: 可用${RESET}\n"
         
-        if [ -f "/root/qrcode.txt" ]; then
-            printf "二维码: /root/qrcode.txt\n"
+        if [ -f "/root/vless_config.txt" ]; then
+            printf "配置文件: /root/vless_config.txt\n"
+            if [ -f "/root/vless_qrcode.txt" ]; then
+                printf "二维码: /root/vless_qrcode.txt\n"
+            fi
+            printf "\n${BLUE}VLESS Reality连接：${RESET}\n"
+            cat /root/vless_config.txt
+        elif [ -f "/root/client_config.txt" ]; then
+            printf "配置文件: /root/client_config.txt (旧格式)\n"
+            if [ -f "/root/qrcode.txt" ]; then
+                printf "二维码: /root/qrcode.txt\n"
+            fi
+            printf "\n${BLUE}VLESS Reality连接：${RESET}\n"
+            cat /root/client_config.txt
+        fi
+    else
+        printf "${RED}✗ VLESS Reality 配置: 不存在${RESET}\n"
+    fi
+    
+    # 检查 Shadowsocks 配置
+    if [ -f "/root/ss_config.txt" ]; then
+        printf "\n${GREEN}✓ Shadowsocks 配置: 可用${RESET}\n"
+        printf "配置文件: /root/ss_config.txt\n"
+        
+        if [ -f "/root/ss_qrcode.txt" ]; then
+            printf "二维码: /root/ss_qrcode.txt\n"
         fi
         
-        printf "\n${BLUE}VLESS连接：${RESET}\n"
-        cat /root/client_config.txt
+        printf "\n${BLUE}Shadowsocks连接：${RESET}\n"
+        cat /root/ss_config.txt
         
+        # 显示 Shadowsocks 密码
+        if [ -f "/usr/local/etc/xray/ss_password.txt" ]; then
+            printf "\n${BLUE}Shadowsocks 密码：${RESET}\n"
+            cat /usr/local/etc/xray/ss_password.txt
+        fi
     else
-        printf "${RED}✗ 客户端配置: 不存在${RESET}\n"
-        printf "请重新安装或重新生成配置\n"
+        printf "\n${RED}✗ Shadowsocks 配置: 不存在${RESET}\n"
+    fi
+    
+    if [ ! -f "/root/vless_config.txt" ] && [ ! -f "/root/client_config.txt" ] && [ ! -f "/root/ss_config.txt" ]; then
+        printf "\n${RED}请重新安装或重新生成配置${RESET}\n"
     fi
     
     printf "\n${GREEN}=== 日志文件 ===${RESET}\n"
@@ -135,6 +192,12 @@ check_status() {
         else
             printf "${YELLOW}⚠ 端口443规则: 未配置${RESET}\n"
         fi
+        
+        if ufw status | grep -q "8388"; then
+            printf "${GREEN}✓ 端口8388规则: 已配置${RESET}\n"
+        else
+            printf "${YELLOW}⚠ 端口8388规则: 未配置${RESET}\n"
+        fi
     else
         printf "UFW: 未安装\n"
     fi
@@ -142,10 +205,18 @@ check_status() {
     # 检查 iptables
     if command -v iptables &>/dev/null; then
         iptables_443=$(iptables -L INPUT -n 2>/dev/null | grep -c ":443")
+        iptables_8388=$(iptables -L INPUT -n 2>/dev/null | grep -c ":8388")
+        
         if [ "$iptables_443" -gt 0 ]; then
             printf "${GREEN}✓ iptables 443规则: 已配置${RESET}\n"
         else
             printf "${YELLOW}⚠ iptables 443规则: 未明确配置${RESET}\n"
+        fi
+        
+        if [ "$iptables_8388" -gt 0 ]; then
+            printf "${GREEN}✓ iptables 8388规则: 已配置${RESET}\n"
+        else
+            printf "${YELLOW}⚠ iptables 8388规则: 未明确配置${RESET}\n"
         fi
     fi
 }
