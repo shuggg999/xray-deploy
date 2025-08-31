@@ -68,6 +68,15 @@ show_menu() {
 main() {
     check_root
     
+    # 检查命令行参数
+    if [[ "$1" == "--auto-install" ]]; then
+        info "自动安装模式..."
+        . "$SCRIPT_DIR/modules/install.sh"
+        install_main
+        success "安装完成！"
+        exit 0
+    fi
+    
     while true; do
         show_menu
         read -r choice

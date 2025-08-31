@@ -101,4 +101,14 @@ echo ""
 # 启动主脚本
 echo -e "${YELLOW}启动 Xray Reality 部署脚本...${RESET}"
 echo ""
-exec "./deploy.sh"
+
+# 检查是否通过管道运行（一键安装模式）
+if [ -p /dev/stdin ]; then
+    echo -e "${GREEN}检测到一键安装模式，自动开始安装...${RESET}"
+    echo ""
+    # 自动执行安装
+    "./deploy.sh" --auto-install
+else
+    # 交互模式
+    exec "./deploy.sh"
+fi
