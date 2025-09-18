@@ -48,8 +48,8 @@ generate_keys() {
     
     # 生成 Reality 密钥对
     KEY_PAIR=$(xray x25519)
-    PRIVATE_KEY=$(echo "$KEY_PAIR" | grep "Private key:" | awk '{print $3}')
-    PUBLIC_KEY=$(echo "$KEY_PAIR" | grep "Public key:" | awk '{print $3}')
+    PRIVATE_KEY=$(echo "$KEY_PAIR" | grep "PrivateKey:" | awk '{print $2}')
+    PUBLIC_KEY=$(echo "$KEY_PAIR" | grep "Password:" | awk '{print $2}')
     
     echo "$PRIVATE_KEY" > /usr/local/etc/xray/key.txt
     
@@ -244,7 +244,7 @@ generate_client_config() {
     SS_PASSWORD=$(cat /usr/local/etc/xray/ss_password.txt)
     
     # 从配置文件中获取 public key 和 short id
-    PUBLIC_KEY=$(xray x25519 -i "$PRIVATE_KEY" | grep "Public key:" | awk '{print $3}')
+    PUBLIC_KEY=$(xray x25519 -i "$PRIVATE_KEY" | grep "Password:" | awk '{print $2}')
     SHORT_ID=$(grep -A 3 "shortIds" /usr/local/etc/xray/config.json | grep -E '"[a-zA-Z0-9]+"' | grep -v "shortIds" | tr -d ' "' | head -1)
     
     # 生成 VLESS Reality 连接 (按v2rayN标准格式)
